@@ -1,0 +1,23 @@
+{
+  "name": "htmlfactory",
+  "version": "4.0.0",
+  "description": "Template Engine",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "Template",
+    "Template",
+    "Engine"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/startpimp/HTMLFactory.git"
+  },
+  "author": "devling_startkingz",
+  "license": "ISC",
+  "dependencies": {
+    "app-root-path": "^3.0.0"
+  }
+}
