@@ -1,6 +1,6 @@
 {
   "name": "factory-engine",
-  "version": "4.0.0",
+  "version": "4.0.1",
   "description": "Template Engine",
   "main": "index.js",
   "scripts": {
@@ -13,7 +13,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/startpimp/HTMLFactory.git"
+    "url": "git+https://github.com/startpimp/Factory-Engine.git"
   },
   "author": "devling_startkingz",
   "license": "ISC",
