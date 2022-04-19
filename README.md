@@ -4,7 +4,7 @@ C'est un moteur de template, rien de plus normal :)
 ## Utiliser la syntaxe (Syntaxe)
 Factory fonctionne avec des blocks de commandes qui lui sont propres. Ces blocks sont définit via `<<` et `>>` et le code factory se trouvera entre ces flèches.
 
-> Types de données
+> Types de données<br>
 `ovar` est une variable propre au fichier ou à ses parents
 `ivar` est une variable d'un fichier enfant
 `file` est le contenu du fichier donné
