@@ -1,6 +1,6 @@
 {
   "name": "factory-engine",
-  "version": "4.0.1",
+  "version": "4.0.2",
   "description": "Template Engine",
   "main": "index.js",
   "scripts": {
