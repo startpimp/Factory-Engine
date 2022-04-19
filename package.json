@@ -1,5 +1,5 @@
 {
-  "name": "htmlfactory",
+  "name": "factory-engine",
   "version": "4.0.0",
   "description": "Template Engine",
   "main": "index.js",
