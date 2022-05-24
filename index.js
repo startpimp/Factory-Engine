@@ -31,7 +31,6 @@ const PARSE_TYPE = async (command, files, vars) => {
 	if(ARR.groups.type == "FILE") {
 		const PARSED = parseInt(ARR.groups.content);
 		if(isNaN(PARSED)) return await parseFile(ARR.groups.content, vars);
-		//console.log(command, PARSED, files, vars)
 
 		const FILE = files[PARSED];
 		const VARS = {
@@ -83,11 +82,10 @@ async function format(code, vars, files={}) {
 
 	for (let i = 0; i < RULES.length; i++) {
 		let ARR = RULES[i][0].exec(code);
-	    console.log(RULES[i][0], code, RULES[i][0].exec(code))
-	   
+	    
 	    if(ARR == null) continue;
-    	console.log(ARR)
     	if(isDuplication(TO_PASS, ARR.index)) continue;
+
     	const INDEX = setIndex(ARR.index, TMP_INDEXES);
     	TO_PASS.push({
     		index: ARR.index,
@@ -135,15 +133,11 @@ function setIndex(index, indexes) {
 async function replaceAsync(str, regex, async_callback) {
     const PROMISES = [];
     str.replace(regex, (match, ...args) => {
-    	//console.log(true, args);
         const PROMISE = async_callback(match, ...args);
         PROMISES.push(PROMISE);
     });
 
-
     const DATA = await Promise.all(PROMISES);
-    //console.log(DATA)
-
     return str.replace(regex, () => DATA.shift());
 }
 
