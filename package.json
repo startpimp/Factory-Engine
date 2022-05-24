@@ -1,6 +1,6 @@
 {
   "name": "factory-engine",
-  "version": "4.0.2",
+  "version": "4.1.0",
   "description": "Template Engine",
   "main": "index.js",
   "scripts": {
@@ -8,8 +8,9 @@
   },
   "keywords": [
     "Template",
-    "Template",
-    "Engine"
+    "Engine",
+    "JS",
+    "JavaScript"
   ],
   "repository": {
     "type": "git",

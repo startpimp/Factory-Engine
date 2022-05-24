@@ -2,7 +2,7 @@ const FACTORY = require("../index.js");
 const FS = require("fs");
 
 async function parse(info, ovars) {
-	var result = "PUT:";
+	let result = "PUT:";
 
 	switch(info.groups.type) {
 		case "id":
@@ -11,7 +11,7 @@ async function parse(info, ovars) {
 			});
 
 			var TPL = await template(info, DATA, ovars);
-			result += TPL == undefined ? "<pre>" + JSON.stringify(DATA, null, "\t") + "</pre>" : TPL;
+			result += !TPL ? "<pre>" + JSON.stringify(DATA, null, "\t") + "</pre>" : TPL;
 			
 			break;
 
@@ -21,7 +21,7 @@ async function parse(info, ovars) {
 			});
 
 			var TPL = await template(info, DATA, ovars);
-			result += TPL == undefined ? "<pre>" + JSON.stringify(DATA, null, "\t") + "</pre>" : TPL;
+			result += !TPL ? "<pre>" + JSON.stringify(DATA, null, "\t") + "</pre>" : TPL;
 			
 			break;
 
@@ -33,7 +33,7 @@ async function parse(info, ovars) {
 			});
 
 			var TPL = await template(info, DATA, ovars);
-			result += TPL == undefined ? "<pre>" + JSON.stringify(DATA, null, "\t") + "</pre>" : TPL;
+			result += !TPL ? "<pre>" + JSON.stringify(DATA, null, "\t") + "</pre>" : TPL;
 			
 			break;
 	}
@@ -46,7 +46,7 @@ async function parse(info, ovars) {
 }
 
 async function template(info, data, ovars) {
-	let result = undefined;
+	let result;
 
 	if(info.groups.tpl != ";" && !Array.isArray(data))
 		result = "<b style=\"[EAT-01]\">Result of " + info.groups.type_value + " should be an array.</b>";
@@ -54,7 +54,8 @@ async function template(info, data, ovars) {
 	if(info.groups.tpl == ";") return;
 
 	result = ""
-	for (var i = 0; i < data.length; i++) {
+	info.groups.tpl_type = info.groups.tpl_type.replace(/\(.*?\)/gs, "");
+	for (let i = 0; i < data.length; i++) {
 
 		if(info.groups.tpl_type == "file") {
 			const FILE = info.groups.tpl_value.replace(/^'/, "").replace(/';$/, "");

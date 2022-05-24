@@ -1,9 +1,9 @@
 
-function parse(info, ovars) {
-	var result = undefined;
-	var id = info.groups.id == undefined ? "main" : info.groups.id;
-	var ivars = {};
-	var file = undefined;
+async function parse(info, ovars) {
+	let result;
+	let id = !info.groups.id ? "main" : info.groups.id;
+	let ivars = {};
+	let file;
 
 	switch (info.groups.type) {
 		case "ovar":
@@ -17,7 +17,10 @@ function parse(info, ovars) {
 		case "file":
 			file = info.groups.value.replace(/^'/g, "");
 			file = file.replace(/'$/g, "");
-			result = "FILE:" + id;
+
+			if(id == "main") result = "PUT:" + (await FACTORY.parseFile(file, ovars));
+			else result = "FILE:" + id;
+			
 			break;
 	};
 
@@ -29,4 +32,4 @@ function parse(info, ovars) {
 	};
 } 
 
-module.exports.parse = parse
+module.exports.parse = parse;

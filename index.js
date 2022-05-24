@@ -15,12 +15,11 @@ async function parseFile(file, vars) {
 }
 
 async function parse(content, vars) {
-	content = await replaceAsync(content, /<<(.*)>>/gs, async (full, inside) => {
+	content = await replaceAsync(content, /<<(.*?)>>/sg, async (full, inside) => {
 		const FORM = await format(inside, vars);
 		return (await parseCommands(FORM[1], FORM[0], vars)).join("");
 	});
-	content = await replaceAsync(content, /{{\s*ovar\s*:\s*(\w+?)\s*}}/g, (full, arg) => { return vars[arg] == undefined ? "" : vars[arg]; });
-
+	content = await replaceAsync(content, /{{\s*ovar\s*:\s*(\w+?)\s*}}/g, (full, arg) => { return !vars[arg] ? "" : vars[arg]; });
 	return content;
 }
 
@@ -32,6 +31,7 @@ const PARSE_TYPE = async (command, files, vars) => {
 	if(ARR.groups.type == "FILE") {
 		const PARSED = parseInt(ARR.groups.content);
 		if(isNaN(PARSED)) return await parseFile(ARR.groups.content, vars);
+		//console.log(command, PARSED, files, vars)
 
 		const FILE = files[PARSED];
 		const VARS = {
@@ -46,12 +46,12 @@ const PARSE_TYPE = async (command, files, vars) => {
 }
 
 async function parseCommands(commands, files, vars) {
-	for (var i = 0; i < commands.length; i++) {
-		if(commands[i] == undefined) {
+	for (let i = 0; i < commands.length; i++) {
+		if(!commands[i]) {
 			commands[i] = "";
 			continue;
 		}
-		if(commands[i].constructor === Array){
+		if(commands[i].constructor === Array) {
 			commands[i] = await parseCommands(commands[i]);
 			continue;
 		}
@@ -63,7 +63,7 @@ async function parseCommands(commands, files, vars) {
 
 async function parseFileCommands(commands, files, vars) {
 	for(k in commands) {
-		if(commands[k] == undefined) {
+		if(!commands[k]) {
 			commands[k] = "";
 			continue;
 		}
@@ -75,52 +75,55 @@ async function parseFileCommands(commands, files, vars) {
 
 async function format(code, vars, files={}) {
 	const TMP_COMMANDS = [];
-	var FILES = files;
+	let FILES = files;
 	const TMP_INDEXES = [];
 	const TO_PASS = [];
 
 	code = await replaceAsync(code, /<(#|-).*?-?#>/gs, () => { return "" })
 
-	for (var i = 0; i < RULES.length; i++) {
-		let ARR;
-	    while((ARR = RULES[i][0].exec(code)) !== null) {
-	    	if(isDuplication(TO_PASS, ARR.index)) continue;
-	    	const INDEX = setIndex(ARR.index, TMP_INDEXES);
-	    	TO_PASS.push({
-	    		index: ARR.index,
-	    		size: ARR[0].length
-	    	});
+	for (let i = 0; i < RULES.length; i++) {
+		let ARR = RULES[i][0].exec(code);
+	    console.log(RULES[i][0], code, RULES[i][0].exec(code))
+	   
+	    if(ARR == null) continue;
+    	console.log(ARR)
+    	if(isDuplication(TO_PASS, ARR.index)) continue;
+    	const INDEX = setIndex(ARR.index, TMP_INDEXES);
+    	TO_PASS.push({
+    		index: ARR.index,
+    		size: ARR[0].length
+    	});
 
-	    	TMP_INDEXES.insert(INDEX, ARR.index);
+    	TMP_INDEXES.insert(INDEX, ARR.index);
 
-	    	const PARSED = await require("./syntax/" + RULES[i][1] + ".js").parse(ARR, vars, FILES);
-	    	if (FILES[PARSED.id] == undefined) FILES[PARSED.id] = {
-	    		file: undefined,
-	    		ivars: {}
-	    	};
-	    	if(PARSED.merge != undefined) FILES = JSON.merge(FILES, PARSED.merge);
-	    	if(PARSED.to != undefined) FILES[PARSED.to].ivars[PARSED.key] = PARSED.value;
-	    	if(PARSED.file != undefined) FILES[PARSED.id].file = PARSED.file;
-	    	if(PARSED.ivars.length != 0) FILES[PARSED.id].ivars = JSON.merge(FILES[PARSED.id].ivars, PARSED.ivars);
 
-	    	TMP_COMMANDS.insert(INDEX, PARSED.result);
-	    }
+    	const PARSED = await require("./syntax/" + RULES[i][1] + ".js").parse(ARR, vars, FILES);
+    	if (!FILES[PARSED.id]) FILES[PARSED.id] = {
+    		file: undefined,
+    		ivars: {}
+    	};
+    	if(PARSED.merge) FILES = JSON.merge(FILES, PARSED.merge);
+    	if(PARSED.to) FILES[PARSED.to].ivars[PARSED.key] = PARSED.value;
+    	if(PARSED.file) FILES[PARSED.id].file = PARSED.file;
+    	if(PARSED.ivars.length !== 0) FILES[PARSED.id].ivars = JSON.merge(FILES[PARSED.id].ivars, PARSED.ivars);
+
+    	TMP_COMMANDS.insert(INDEX, PARSED.result);
 	}
 
 	return [FILES, TMP_COMMANDS];
 }
 
 function isDuplication(array, index) {
-	for (var i = 0; i < array.length; i++) {
+	for (let i = 0; i < array.length; i++) {
 		if(index >= array[i].index && index <= array[i].index + array[i].size) return true;
 	}
 	return false;
 }
 
 function setIndex(index, indexes) {
-	var i = 0;
+	let i = 0;
 	while(i != indexes.length) {
-		if(indexes[i + 1] == undefined) {
+		if(indexes[i + 1]) {
 			if(indexes[i] <= index) return i + 1;
 			else return i;
 		} else if(indexes[i] <= index && indexes[i + 1] >= index) return i + 1;
@@ -132,11 +135,14 @@ function setIndex(index, indexes) {
 async function replaceAsync(str, regex, async_callback) {
     const PROMISES = [];
     str.replace(regex, (match, ...args) => {
+    	//console.log(true, args);
         const PROMISE = async_callback(match, ...args);
         PROMISES.push(PROMISE);
     });
 
+
     const DATA = await Promise.all(PROMISES);
+    //console.log(DATA)
 
     return str.replace(regex, () => DATA.shift());
 }

@@ -1,0 +1,136 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Orelega+One&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Comfortaa:wght@300;400;500;600;700&display=swap');
+:root {
+	--warning: #FFC732;
+	--deprecated: #FF326A;
+	--info: #4C7DFF;
+}
+
+.warning, .info {
+	border-radius: 15px;
+	background-color: #262626;
+	padding: 15px;
+	padding-top: calc(10px * 2 + 24px + 15px);
+	position: relative;
+	margin-bottom: 50px;
+}
+
+.box .title {
+	position: initial;
+	font-size: 25px;
+	text-decoration: underline;
+}
+
+.box {
+	margin-bottom: 50px;
+}
+
+.box .description {
+	margin-top: 15px;
+}
+
+.box .title:hover {
+	color: inherit;
+}
+
+.linker {
+	padding-right: 15px;
+}
+
+.linker:hover .linker-icon {
+	visibility: visible;
+}
+
+.linker-icon {
+	fill: #ADADAD;
+	margin-left: 7.5px;
+	visibility: hidden;
+}
+
+.head {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: calc(100% - 20px);
+	padding: 10px;
+	border-radius: 15px;
+	height: 24px;
+	background-color: #2E2E2E;
+}
+
+.description {
+	text-align: justify;
+}
+
+.warning-icon {
+  fill: var(--warning);
+}
+
+.info-icon {
+	fill: var(--info);
+}
+
+.title {
+	position: absolute;
+	top: 12.5px;
+	left: calc(15px + 24px + 5px);
+	font-weight: bold;
+}
+
+* {
+	margin: 0;
+	padding: 0;
+	font-family: "Roboto";
+	letter-spacing: 0.5px;
+	color: #ADADAD;
+	-webkit-font-smoothing: antialiased;
+}
+
+a:hover {
+	color: var(--info);
+}
+
+html {
+	background-color: #1D1D1D;
+}
+
+h1 {
+	text-decoration: underline;
+	font-family: "Orelega One";
+	letter-spacing: 1px;
+}
+
+#menus {
+	position: absolute;
+	width: 300px;
+	height: calc(100% - 100px);
+	background-color: #161616;
+	display: inline-block;
+}
+
+#body {
+	position: absolute;
+	left: 300px;
+	display: inline-block;
+	padding: 50px;
+	width: calc(100% - 400px);
+}
+
+#header {
+	width: 100%;
+	background-color: #326AFF;
+	height: 100px;
+	position: relative;
+}
+
+#header p {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	font-size: 50px;
+	font-family: "Comfortaa";
+	font-weight: bold;
+	color: white;
+}
