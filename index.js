@@ -2,8 +2,8 @@ const APP_ROOT = require("app-root-path") + "/";
 const FS = require("fs");
 
 const RULES = [
-	[/((\$(?<id>[0-9]+))\s*=\s*)?INSERT\s+(?<type>ovar|file)\s*:\s*(?<value>.+?)\s*;/g, "insert"],
-	[/IF\s*\((?<cond>.+)\)\s*;(?<code>.*?)BREAK;/gs, "condition"],
+	[/IF\s*\((?<condition>.*?)\)\s*:\s*\{(?<code1>.*?)\}!(\s*ELSE\s*\{(?<code2>.*?)\}!)?/gs, "condition"],
+	[/((\$(?<id>[0-9]+))\s*=\s*)?INSERT\s+(?<type>ovar|file|block)(\(.*?\))?\s*:\s*(?<value>.+?)\s*;/gs, "insert"],
 	[/SET\s+(\$(?<id>[0-9]+)::)?(?<inside_var>.*)\s+BY\s+block(\(.*?\))?:\{(?<content>.*)\}/gs, "reb"],
 	[/SET\s+(\$(?<id>[0-9]+)::)?(?<inside_var>.*)\s+BY\s+file:\'(?<file>.*?)\'\s*;/g, "ref"],
 	[/SET\s+(\$(?<id>[0-9]+)::)?(?<inside_var>.*)\s+BY\s+ovar:(?<ovar>.*?)\s*;/g, "reo"],
@@ -19,7 +19,7 @@ async function parse(content, vars) {
 		const FORM = await format(inside, vars);
 		return (await parseCommands(FORM[1], FORM[0], vars)).join("");
 	});
-	content = await replaceAsync(content, /{{\s*ovar\s*:\s*(\w+?)\s*}}/g, (full, arg) => { return !vars[arg] ? "" : vars[arg]; });
+	content = await replaceAsync(content, /{{\s*ovar\s*:\s*(\w+?)\s*}}/g, (full, arg) => !vars[arg] ? "" : vars[arg]);
 	return content;
 }
 
@@ -78,11 +78,12 @@ async function format(code, vars, files={}) {
 	const TMP_INDEXES = [];
 	const TO_PASS = [];
 
-	code = await replaceAsync(code, /<(#|-).*?-?#>/gs, () => { return "" })
+	code = await replaceAsync(code, /<(#|-).*?-?#>/gs, () => { return "" });
 
 	for (let i = 0; i < RULES.length; i++) {
-		let ARR = RULES[i][0].exec(code);
-	    
+		const ARR = RULES[i][0].exec(code);
+		RULES[i][0].exec(code)
+
 	    if(ARR == null) continue;
     	if(isDuplication(TO_PASS, ARR.index)) continue;
 
@@ -145,3 +146,4 @@ module.exports.onDBRequest = async () => {};
 module.exports.parse = parse;
 module.exports.parseFile = parseFile;
 module.exports.format = format;
+module.exports.APP_ROOT = APP_ROOT;

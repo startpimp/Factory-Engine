@@ -1,3 +1,6 @@
+const FACTORY = require("../index.js");
+const FS = require("fs");
+const PATH = require("path");
 
 async function parse(info, ovars) {
 	let result;
@@ -14,11 +17,18 @@ async function parse(info, ovars) {
 			result = "PUT:" + ovars[info.groups.value];
 			break;
 
+		case "block":
+			info.groups.value = info.groups.value.replace(/^\{/g, "");
+			info.groups.value = info.groups.value.replace(/\}$/g, "");
+			//console.log(ovars)
+			result = "PUT:" + info.groups.value;
+			break;
+
 		case "file":
 			file = info.groups.value.replace(/^'/g, "");
 			file = file.replace(/'$/g, "");
 
-			if(id == "main") result = "PUT:" + (await FACTORY.parseFile(file, ovars));
+			if(id == "main") result = "PUT:" + await FACTORY.parseFile(file, ovars);
 			else result = "FILE:" + id;
 			
 			break;
