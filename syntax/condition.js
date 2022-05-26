@@ -32,8 +32,6 @@ async function parse(info, ovars, files) {
 		ivars
 	};
 
-	console.log(ARR)
-
 	return {
 		file,
 		id,

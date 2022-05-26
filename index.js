@@ -1,15 +1,6 @@
 const APP_ROOT = require("app-root-path") + "/";
 const FS = require("fs");
 
-const RULES = [
-	[/IF\s*\((?<condition>.*?)\)\s*:\s*\{(?<code1>.*?)\}!(\s*ELSE\s*\{(?<code2>.*?)\}!)?/gs, "condition"],
-	[/((\$(?<id>[0-9]+))\s*=\s*)?INSERT\s+(?<type>ovar|file|block)(\(.*?\))?\s*:\s*(?<value>.+?)\s*;/gs, "insert"],
-	[/SET\s+(\$(?<id>[0-9]+)::)?(?<inside_var>.*)\s+BY\s+block(\(.*?\))?:\{(?<content>.*)\}/gs, "reb"],
-	[/SET\s+(\$(?<id>[0-9]+)::)?(?<inside_var>.*)\s+BY\s+file:\'(?<file>.*?)\'\s*;/g, "ref"],
-	[/SET\s+(\$(?<id>[0-9]+)::)?(?<inside_var>.*)\s+BY\s+ovar:(?<ovar>.*?)\s*;/g, "reo"],
-	[/EXECUTE\s*\(\s*(?<type>req|file|id):'(?<type_value>.*?)'\)\s*(?<tpl>\s+WITH\s+(?<tpl_type>file|block(\(.*?\))?):(?<tpl_value>'(.*?)';|\{.*\})|;)/gs, "execute"],
-];
-
 async function parseFile(file, vars) {
 	return await parse(FS.readFileSync(PATH.normalize(APP_ROOT + file)).toString(), vars);
 }
@@ -19,7 +10,10 @@ async function parse(content, vars) {
 		const FORM = await format(inside, vars);
 		return (await parseCommands(FORM[1], FORM[0], vars)).join("");
 	});
-	content = await replaceAsync(content, /{{\s*ovar\s*:\s*(\w+?)\s*}}/g, (full, arg) => !vars[arg] ? "" : vars[arg]);
+
+	content = await replaceAsync(content, /{{\s*ovar\s*:\s*(\w+?)\s*}}/g, (full, arg) => {
+		return !vars[arg] ? "" : vars[arg]
+	});
 	return content;
 }
 
@@ -38,7 +32,7 @@ const PARSE_TYPE = async (command, files, vars) => {
 			...await parseFileCommands(FILE.ivars, files, vars)
 		};
 		return await parseFile(FILE.file, VARS);
-	} 
+	}
 	else if(ARR.groups.type == "PUT") return await parse(ARR.groups.content, vars);
 
 	return command;
@@ -51,7 +45,7 @@ async function parseCommands(commands, files, vars) {
 			continue;
 		}
 		if(commands[i].constructor === Array) {
-			commands[i] = await parseCommands(commands[i]);
+			commands[i] = await parseCommands(commands[i], files, vars);
 			continue;
 		}
 		commands[i] = await PARSE_TYPE(commands[i], files, vars);
@@ -80,33 +74,40 @@ async function format(code, vars, files={}) {
 
 	code = await replaceAsync(code, /<(#|-).*?-?#>/gs, () => { return "" });
 
+	const RULES = [
+		[/IF\s*\((?<condition>.*?)\)\s*:\s*\{(?<code1>.*?)\}!(\s*ELSE\s*\{(?<code2>.*?)\}!)?/gs, "condition"],
+		[/((\$(?<id>[0-9]+))\s*=\s*)?INSERT\s+(?<type>ovar|file|block)(\(.*?\))?\s*:\s*(?<value>.+?)\s*;/gs, "insert"],
+		[/SET\s+(\$(?<id>[0-9]+)::)?(?<inside_var>.*)\s+BY\s+block(\(.*?\))?:\{(?<content>.*)\}/gs, "reb"],
+		[/SET\s+(\$(?<id>[0-9]+)::)?(?<inside_var>.*)\s+BY\s+file:\'(?<file>.*?)\'\s*;/g, "ref"],
+		[/SET\s+(\$(?<id>[0-9]+)::)?(?<inside_var>.*)\s+BY\s+ovar:(?<ovar>.*?)\s*;/g, "reo"],
+		[/EXECUTE\s*\(\s*(?<type>req|file|id):'(?<type_value>.*?)'\)\s*(?<tpl>\s+WITH\s+(?<tpl_type>file|block(\(.*?\))?):(?<tpl_value>'(.*?)';|\{.*\})|;)/gs, "execute"],
+	];
+
 	for (let i = 0; i < RULES.length; i++) {
-		const ARR = RULES[i][0].exec(code);
-		RULES[i][0].exec(code)
+		let array;
+		while((array = RULES[i][0].exec(code)) !== null) {
+	    	if(isDuplication(TO_PASS, array.index)) continue;
 
-	    if(ARR == null) continue;
-    	if(isDuplication(TO_PASS, ARR.index)) continue;
+	    	const INDEX = setIndex(array.index, TMP_INDEXES);
+	    	TO_PASS.push({
+	    		index: array.index,
+	    		size: array[0].length
+	    	});
 
-    	const INDEX = setIndex(ARR.index, TMP_INDEXES);
-    	TO_PASS.push({
-    		index: ARR.index,
-    		size: ARR[0].length
-    	});
+	    	TMP_INDEXES.insert(INDEX, array.index);
 
-    	TMP_INDEXES.insert(INDEX, ARR.index);
+	    	const PARSED = await require("./syntax/" + RULES[i][1] + ".js").parse(array, vars, FILES);
+	    	if (!FILES[PARSED.id]) FILES[PARSED.id] = {
+	    		file: undefined,
+	    		ivars: {}
+	    	};
+	    	if(PARSED.merge) FILES = JSON.merge(FILES, PARSED.merge);
+	    	if(PARSED.to) FILES[PARSED.to].ivars[PARSED.key] = PARSED.value;
+	    	if(PARSED.file) FILES[PARSED.id].file = PARSED.file;
+	    	if(PARSED.ivars.length !== 0) FILES[PARSED.id].ivars = JSON.merge(FILES[PARSED.id].ivars, PARSED.ivars);
 
-
-    	const PARSED = await require("./syntax/" + RULES[i][1] + ".js").parse(ARR, vars, FILES);
-    	if (!FILES[PARSED.id]) FILES[PARSED.id] = {
-    		file: undefined,
-    		ivars: {}
-    	};
-    	if(PARSED.merge) FILES = JSON.merge(FILES, PARSED.merge);
-    	if(PARSED.to) FILES[PARSED.to].ivars[PARSED.key] = PARSED.value;
-    	if(PARSED.file) FILES[PARSED.id].file = PARSED.file;
-    	if(PARSED.ivars.length !== 0) FILES[PARSED.id].ivars = JSON.merge(FILES[PARSED.id].ivars, PARSED.ivars);
-
-    	TMP_COMMANDS.insert(INDEX, PARSED.result);
+	    	TMP_COMMANDS.insert(INDEX, PARSED.result);
+		}
 	}
 
 	return [FILES, TMP_COMMANDS];

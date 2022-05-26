@@ -20,7 +20,6 @@ async function parse(info, ovars) {
 		case "block":
 			info.groups.value = info.groups.value.replace(/^\{/g, "");
 			info.groups.value = info.groups.value.replace(/\}$/g, "");
-			//console.log(ovars)
 			result = "PUT:" + info.groups.value;
 			break;
 
