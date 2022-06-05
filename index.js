@@ -6,7 +6,7 @@ async function parseFile(file, vars) {
 }
 
 async function parse(content, vars) {
-	content = await replaceAsync(content, /<<(.*?)>>/sg, async (full, inside) => {
+	content = await replaceAsync(content, /<<(.*?)>>\s*(?=<<|$)/sg, async (full, inside) => {
 		const FORM = await format(inside, vars);
 		return (await parseCommands(FORM[1], FORM[0], vars)).join("");
 	});
