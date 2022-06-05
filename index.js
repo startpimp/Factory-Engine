@@ -1,4 +1,5 @@
 const APP_ROOT = require("app-root-path") + "/";
+const XRegExp = require("xregexp");
 const FS = require("fs");
 
 async function parseFile(file, vars) {
@@ -6,11 +7,29 @@ async function parseFile(file, vars) {
 }
 
 async function parse(content, vars) {
-	content = await replaceAsync(content, /<<(.*?)>>\s*(?=<<|$)/sg, async (full, inside) => {
-		const FORM = await format(inside, vars);
-		return (await parseCommands(FORM[1], FORM[0], vars)).join("");
+	const COMMAND_BLOCKS = XRegExp.matchRecursive(content, '<<', '>>', "gs", {
+		valueNames: ["outside", "left", "inside", "right"],
+		unbalanced: 'skip'
 	});
 
+	let start = undefined, end = undefined, inside = undefined;
+	for(const I in COMMAND_BLOCKS) {
+		const PROPERTY = COMMAND_BLOCKS[I];
+		console.log(PROPERTY)
+
+		if(PROPERTY.name === "left") start = PROPERTY.start;
+		if(PROPERTY.name === "inside") inside = PROPERTY.value;
+		if(PROPERTY.name === "right") {
+			end = PROPERTY.end;
+			const FORM = await format(inside, vars);
+			const REPLACEMENT = (await parseCommands(FORM[1], FORM[0], vars)).join("");
+			content = replaceAt(content, start, end, REPLACEMENT);
+
+			start = end = inside = undefined;
+			continue;
+		}
+	}
+	
 	content = await replaceAsync(content, /{{\s*ovar\s*:\s*(\w+?)\s*}}/g, (full, arg) => {
 		return !vars[arg] ? "" : vars[arg]
 	});
@@ -142,6 +161,11 @@ async function replaceAsync(str, regex, async_callback) {
     const DATA = await Promise.all(PROMISES);
     return str.replace(regex, () => DATA.shift());
 }
+
+function replaceAt(str, start, end, replacement) {
+    return str.substring(0, start) + replacement + str.substring(start + end - start);
+}
+
 
 module.exports.onDBRequest = async () => {};
 module.exports.parse = parse;
