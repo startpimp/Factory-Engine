@@ -12,10 +12,10 @@ async function parse(content, vars) {
 		unbalanced: 'skip'
 	});
 
-	let start = undefined, end = undefined, inside = undefined;
+	let start = 0, end = 0, inside = undefined;
+	let modifier = 0;
 	for(const I in COMMAND_BLOCKS) {
 		const PROPERTY = COMMAND_BLOCKS[I];
-		console.log(PROPERTY)
 
 		if(PROPERTY.name === "left") start = PROPERTY.start;
 		if(PROPERTY.name === "inside") inside = PROPERTY.value;
@@ -23,10 +23,9 @@ async function parse(content, vars) {
 			end = PROPERTY.end;
 			const FORM = await format(inside, vars);
 			const REPLACEMENT = (await parseCommands(FORM[1], FORM[0], vars)).join("");
-			content = replaceAt(content, start, end, REPLACEMENT);
-
-			start = end = inside = undefined;
-			continue;
+			content = replaceAt(content, start + modifier, end + modifier, REPLACEMENT);
+			modifier += REPLACEMENT.length - inside.length - 4;
+			inside = undefined;
 		}
 	}
 	
